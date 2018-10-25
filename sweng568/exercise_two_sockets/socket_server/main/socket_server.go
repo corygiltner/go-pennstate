@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"encoding/hex"
 	"encoding/json"
-	"fmt"
+	shared "github.com/corygiltner/go-pennstate/sweng568/exercise_two_sockets"
+	"github.com/google/go-cmp/cmp"
 	"log"
 	"net"
 	"os"
@@ -13,62 +16,49 @@ import (
 // Exercise 2: Sockets
 // 10/29/2018
 
-// TCP sockets server written to share a student record between the Roster
-// System and the Course System
-
-type Student struct {
-	StudID           int
-	Name             string
-	SSN              string
-	EmailAddress     string
-	HomePhone        string
-	HomeAddr         string
-	LocalAddr        string
-	EmergencyContact string
-	ProgramID        int
-	PaymentID        string
-	AcademicStatus   int
-}
+// TCP sockets server :
+// listens for single student json messages
 
 func main() {
+	shared.LogMessage("server - starting student socket integration")
 	listener, err := net.Listen("tcp", "localhost:8888")
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
 	defer listener.Close()
-	fmt.Println("Service is listening on localhost:8888")
+	shared.LogMessage("service is listening on localhost:8888")
 	for {
 		conn, err := listener.Accept()
-		if err != nil {
-			log.Fatal(err)
-			os.Exit(1)
-		}
-		buffer := make([]byte, 4)
+		shared.ErrorHandler(err)
+		shared.LogMessage("request received")
+
+		// create a buffer to hold the request message and read
+		// the message into the buffer
+		buffer := make([]byte, 1024)
 		conn.Read(buffer)
-		request := string(buffer)
-		fmt.Println(request)
-		if request == "1111" {
-			student := Student{
-				StudID:           1111,
-				Name:             "Bob Smith",
-				SSN:              "222-333-1111",
-				EmailAddress:     "bsmith@yahoo.com",
-				HomePhone:        "215-777-8888",
-				HomeAddr:         "123 Tulip Road, Ambler, PA 19002",
-				LocalAddr:        "321 Maple Avenue, Lion Town, PA 16800",
-				EmergencyContact: "John Smith (215-222-6666)",
-				ProgramID:        206,
-				PaymentID:        "1111-206",
-				AcademicStatus:   1,
-			}
-			//ar response *[]byte
-			response, _ := json.Marshal(student)
-			fmt.Println(string(response) + "\n")
-			conn.Write(response)
+		request := bytes.Trim(buffer, "\x00")
+		// log the message
+		shared.LogMessage("student: " + string(request))
+
+		// create a student object from a json message
+		student := shared.Student{}
+		err = json.Unmarshal(request, &student)
+		shared.ErrorHandler(err)
+		shared.LogMessage("saving student: " + student.Name)
+		// check to make sure the object isn't empty if it is
+		// respond with an empty message otherwise return a checksum
+		// and log the sum
+		if cmp.Equal(student, shared.Student{}) {
+			shared.LogMessage("error - not able to save student")
+			conn.Write([]byte(""))
 		} else {
-			conn.Write([]byte("null\n"))
+			shared.LogMessage("student record saved to course system")
+			hash := shared.DigestMessage(request)
+			conn.Write(hash)
+			shared.LogMessage("response: " + hex.EncodeToString(hash))
 		}
+		shared.LogMessage("awaiting next student record")
 		conn.Close()
 	}
 }
