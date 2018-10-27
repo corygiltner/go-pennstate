@@ -1,3 +1,6 @@
+// TCP sockets server :
+// listens for single student json messages
+//
 package main
 
 import (
@@ -10,14 +13,6 @@ import (
 	"net"
 	"os"
 )
-
-// James Giltner
-// SWENG568
-// Exercise 2: Sockets
-// 10/29/2018
-
-// TCP sockets server :
-// listens for single student json messages
 
 func main() {
 	shared.LogMessage("server - starting student socket integration")
@@ -46,9 +41,10 @@ func main() {
 		err = json.Unmarshal(request, &student)
 		shared.ErrorHandler(err)
 		shared.LogMessage("saving student: " + student.Name)
+
 		// check to make sure the object isn't empty if it is
 		// respond with an empty message otherwise return a checksum
-		// and log the sum
+		// and log the hash
 		if cmp.Equal(student, shared.Student{}) {
 			shared.LogMessage("error - not able to save student")
 			conn.Write([]byte(""))
@@ -58,6 +54,8 @@ func main() {
 			conn.Write(hash)
 			shared.LogMessage("response: " + hex.EncodeToString(hash))
 		}
+
+		// the service will continue to listen for new records
 		shared.LogMessage("awaiting next student record")
 		conn.Close()
 	}

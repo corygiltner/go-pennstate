@@ -1,3 +1,5 @@
+// Shared tools for socket server and client:
+//
 package exercise_two_sockets
 
 import (
@@ -7,6 +9,7 @@ import (
 	"time"
 )
 
+// Agreed upon message structure
 type Student struct {
 	StudID           int
 	Name             string
@@ -22,11 +25,14 @@ type Student struct {
 }
 
 // Prints a string of a message and the time
+//
 func LogMessage(message string) {
-	t := time.Now().Local().Format("2018-10-24 00:00:00")
+	t := time.Now().Local().Format(time.RFC1123)
 	fmt.Println(t + ": " + message)
 }
 
+// log an error if it occurs and exit
+//
 func ErrorHandler(e error) {
 	if e != nil {
 		LogMessage("error - " + e.Error())
@@ -34,6 +40,8 @@ func ErrorHandler(e error) {
 	}
 }
 
+// digest a message using SHA256
+//
 func DigestMessage(b []byte) (hash []byte) {
 	hasher := sha256.New()
 	hasher.Write(b)

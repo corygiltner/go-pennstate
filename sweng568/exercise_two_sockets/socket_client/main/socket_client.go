@@ -1,3 +1,7 @@
+// TCP Socket client:
+// sends new student records in a json message to the course system listening
+// on localhost:8888
+//
 package main
 
 import (
@@ -10,6 +14,7 @@ import (
 )
 
 func main() {
+	// print messages the client is starting and act like a new record is found
 	shared.LogMessage("client - starting student socket integration")
 	address := "localhost:8888"
 
@@ -40,12 +45,16 @@ func main() {
 	shared.LogMessage("sending student to course system")
 	request, err := json.Marshal(student)
 	shared.ErrorHandler(err)
+
+	// digest the message with sha256 hash
 	hash := shared.DigestMessage(request)
 	shared.LogMessage("student: " + string(request))
 
+	// send the message
 	_, err = conn.Write(request)
 	shared.ErrorHandler(err)
 
+	//
 	buffer := make([]byte, 1024)
 	conn.Read(buffer)
 	response := bytes.Trim(buffer, "\x00")
