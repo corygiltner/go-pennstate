@@ -1,10 +1,9 @@
-// Shared tools for socket server and client:
-//
-package exercise_two_sockets
+package exercise_four_web
 
 import (
-	"crypto/sha256"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"time"
 )
@@ -25,8 +24,8 @@ type Student struct {
 }
 
 //
-type Message struct {
-	Topic string
+type SubRequest struct {
+	Address string
 }
 
 // Prints a string of a message and the time
@@ -45,11 +44,18 @@ func ErrorHandler(e error) {
 	}
 }
 
-// digest a message using SHA256
-//
-func DigestMessage(b []byte) (hash []byte) {
-	hasher := sha256.New()
-	hasher.Write(b)
-	hash = hasher.Sum(nil)
-	return
+// get the response body
+func ResponseHandler(r *http.Response) (body []byte) {
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	ErrorHandler(err)
+	return body
+}
+
+// get the response body
+func RequestHandler(r *http.Request) (body []byte) {
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	ErrorHandler(err)
+	return body
 }

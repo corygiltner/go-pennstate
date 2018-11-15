@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	shared "github.com/corygiltner/go-pennstate/sweng568/exercise_two_sockets"
+	shared "github.com/corygiltner/go-pennstate/sweng568/exercise_three_messaging"
 	"github.com/google/go-cmp/cmp"
 	"net"
 )
